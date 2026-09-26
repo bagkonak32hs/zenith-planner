@@ -1,0 +1,9 @@
+{
+  "firestore": [
+    {
+      "database": "plannerdb",
+      "rules": "firestore.plannerdb.rules",
+      "indexes": "firestore.plannerdb.indexes.json"
+    }
+  ]
+}

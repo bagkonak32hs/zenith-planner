@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/plannerSnapshots/{snapshotId} {
+      allow read: if isOwner(userId) && snapshotId == "current";
+      allow create, update: if isOwner(userId)
+        && snapshotId == "current"
+        && request.resource.data.ownerUid == userId;
+    }
+  }
+}

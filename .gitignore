@@ -1,0 +1,14 @@
+*.jks
+*.keystore
+keystore.properties
+local.properties
+app/google-services.json
+google-services*.json
+*.log
+PLAY-CONSOLE-UPLOAD/*.apk
+PLAY-CONSOLE-UPLOAD/*.aab
+screen*.png
+window.xml
+.gradle/
+build/
+app/build/
