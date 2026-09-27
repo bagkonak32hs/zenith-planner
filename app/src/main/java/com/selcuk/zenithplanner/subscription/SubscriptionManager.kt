@@ -11,7 +11,7 @@ import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.ProductDetailsResponseListener
-import com.android.billingclient.api.ProductDetailsResult
+import com.android.billingclient.api.QueryProductDetailsResult
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
@@ -167,10 +167,10 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
             .build()
         billingClient.queryProductDetailsAsync(
             params,
-            ProductDetailsResponseListener { billingResult: BillingResult, productDetailsResult: ProductDetailsResult ->
+            ProductDetailsResponseListener { billingResult: BillingResult, queryResult: QueryProductDetailsResult ->
                 cont.resume(
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK)
-                        productDetailsResult.productDetailsList.firstOrNull()
+                        queryResult.productDetailsList?.firstOrNull()
                     else null
                 )
             }
