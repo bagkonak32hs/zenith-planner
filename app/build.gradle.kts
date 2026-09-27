@@ -15,11 +15,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.selcu.zenithplanner"
+    namespace = "com.selcuk.zenithplanner"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.selcu.zenithplanner"
+        applicationId = "com.selcuk.zenithplanner"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
