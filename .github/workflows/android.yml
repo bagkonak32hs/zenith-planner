@@ -36,9 +36,9 @@ jobs:
       - name: Check signing secrets
         id: check_secrets
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          ZENITH_RELEASE_JKS: ${{ secrets.ZENITH_RELEASE_JKS }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$ZENITH_RELEASE_JKS" ]; then
             echo "has_keystore=true" >> $GITHUB_OUTPUT
           else
             echo "has_keystore=false" >> $GITHUB_OUTPUT
@@ -53,12 +53,12 @@ jobs:
       - name: Build release APK (signed)
         if: steps.check_secrets.outputs.has_keystore == 'true'
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          ZENITH_RELEASE_JKS: ${{ secrets.ZENITH_RELEASE_JKS }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > app/zenith-release.jks
+          echo "$ZENITH_RELEASE_JKS" | base64 --decode > app/zenith-release.jks
           cat > keystore.properties <<EOF
           storeFile=app/zenith-release.jks
           storePassword=$KEYSTORE_PASSWORD
