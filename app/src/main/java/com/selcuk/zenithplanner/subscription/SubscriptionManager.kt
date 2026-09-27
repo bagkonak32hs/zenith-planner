@@ -3,11 +3,6 @@ package com.selcuk.zenithplanner.subscription
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -19,11 +14,16 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
+import com.android.billingclient.api.queryProductDetailsAsync
+import com.android.billingclient.api.queryPurchasesAsync
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 private const val TAG = "SubscriptionManager"
 private const val MAX_RETRY_ATTEMPTS = 5
@@ -95,15 +95,16 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
             startConnection()
             return
         }
-        billingClient.queryPurchasesAsync(
-            QueryPurchasesParams.newBuilder()
-                .setProductType(BillingClient.ProductType.SUBS)
-                .build()
-        ) { result, purchases ->
-            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                handlePurchases(purchases)
+        scope.launch {
+            val purchasesResult = billingClient.queryPurchasesAsync(
+                QueryPurchasesParams.newBuilder()
+                    .setProductType(BillingClient.ProductType.SUBS)
+                    .build()
+            )
+            if (purchasesResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                handlePurchases(purchasesResult.purchasesList)
             } else {
-                Log.w(TAG, "queryPurchases failed: ${result.debugMessage}")
+                Log.w(TAG, "queryPurchases failed: ${purchasesResult.billingResult.debugMessage}")
             }
         }
     }
@@ -150,30 +151,26 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
         )
     }
 
-    private suspend fun queryProductDetails(): ProductDetails? =
-        suspendCancellableCoroutine { cont ->
-            val params = QueryProductDetailsParams.newBuilder()
-                .setProductList(
-                    listOf(
-                        QueryProductDetailsParams.Product.newBuilder()
-                            .setProductId(PRO_PRODUCT_ID)
-                            .setProductType(BillingClient.ProductType.SUBS)
-                            .build()
-                    )
+    private suspend fun queryProductDetails(): ProductDetails? {
+        val params = QueryProductDetailsParams.newBuilder()
+            .setProductList(
+                listOf(
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(PRO_PRODUCT_ID)
+                        .setProductType(BillingClient.ProductType.SUBS)
+                        .build()
                 )
-                .build()
-            billingClient.queryProductDetailsAsync(params) { result, details ->
-                cont.resume(
-                    if (result.responseCode == BillingClient.BillingResponseCode.OK)
-                        details.firstOrNull()
-                    else
-                        null
-                )
-            }
-        }
+            )
+            .build()
+        val result = billingClient.queryProductDetailsAsync(params)
+        return if (result.billingResult.responseCode == BillingClient.BillingResponseCode.OK)
+            result.productDetailsList.firstOrNull()
+        else
+            null
+    }
 
-    override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>) {
-        if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases.isNotEmpty()) {
+    override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
+        if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             handlePurchases(purchases)
         } else {
             Log.w(TAG, "onPurchasesUpdated: ${result.responseCode} — ${result.debugMessage}")
@@ -185,4 +182,3 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
         billingClient.endConnection()
     }
 }
-
