@@ -65,7 +65,7 @@ jobs:
           keyAlias=$KEY_ALIAS
           keyPassword=$KEY_PASSWORD
           EOF
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease bundleRelease
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -80,6 +80,14 @@ jobs:
         with:
           name: release-apk
           path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Upload release AAB (Play Store)
+        if: steps.check_secrets.outputs.has_keystore == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: app/build/outputs/bundle/release/*.aab
           retention-days: 30
 
       - name: Upload test results
