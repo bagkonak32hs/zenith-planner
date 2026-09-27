@@ -22,7 +22,7 @@ android {
         applicationId = "com.selcuk.zenithplanner"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -108,7 +108,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    implementation("com.android.billingclient:billing-ktx:7.1.1")
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.13")

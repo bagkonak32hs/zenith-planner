@@ -172,8 +172,8 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
             }
         }
 
-    override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
-        if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+    override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>) {
+        if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases.isNotEmpty()) {
             handlePurchases(purchases)
         } else {
             Log.w(TAG, "onPurchasesUpdated: ${result.responseCode} — ${result.debugMessage}")
