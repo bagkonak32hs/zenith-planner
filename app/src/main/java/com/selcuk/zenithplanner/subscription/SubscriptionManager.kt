@@ -10,11 +10,11 @@ import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
+import com.android.billingclient.api.ProductDetailsResponseListener
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
-import com.android.billingclient.api.queryProductDetailsAsync
 import com.android.billingclient.api.queryPurchasesAsync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +24,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 private const val TAG = "SubscriptionManager"
 private const val MAX_RETRY_ATTEMPTS = 5
@@ -151,7 +153,7 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
         )
     }
 
-    private suspend fun queryProductDetails(): ProductDetails? {
+    private suspend fun queryProductDetails(): ProductDetails? = suspendCancellableCoroutine { cont ->
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(
                 listOf(
@@ -162,11 +164,16 @@ class SubscriptionManager(context: Context) : PurchasesUpdatedListener {
                 )
             )
             .build()
-        val result = billingClient.queryProductDetailsAsync(params)
-        return if (result.billingResult.responseCode == BillingClient.BillingResponseCode.OK)
-            result.productDetailsList.firstOrNull()
-        else
-            null
+        billingClient.queryProductDetailsAsync(
+            params,
+            ProductDetailsResponseListener { billingResult, productDetails ->
+                cont.resume(
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK)
+                        productDetails.firstOrNull()
+                    else null
+                )
+            }
+        )
     }
 
     override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
